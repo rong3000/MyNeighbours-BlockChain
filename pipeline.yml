@@ -39,6 +39,7 @@ stages:
     jobs:
       - deployment: Deploy
         displayName: Deploy
+        environment: 'MyNeighbours_BlockChain_Environment_Staging'
         pool:
           vmImage: ubuntu-latest
         strategy:
