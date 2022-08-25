@@ -48,7 +48,7 @@ stages:
                 - task: AzureRmWebAppDeployment@4
                   inputs:
                     ConnectionType: "AzureRM"
-                    azureSubscription: "Azure subscription My Neighbours Staging"
+                    azureSubscription: "Azure subscription 1(06a6013b-95aa-4307-aa1e-e958d7327334)"
                     appType: "webAppLinux"
                     WebAppName: "my-neighbours-blockchain-staging-app-service"
                     packageForLinux: "$(Pipeline.Workspace)/**/*.zip"
