@@ -48,9 +48,11 @@ stages:
                 - task: AzureRmWebAppDeployment@4
                   inputs:
                     ConnectionType: "AzureRM"
-                    azureSubscription: "Azure subscription 1(06a6013b-95aa-4307-aa1e-e958d7327334)"
-                    appType: "webAppLinux"
+                    azureSubscription: "Azure subscription 1(2)(06a6013b-95aa-4307-aa1e-e958d7327334)"
+                    appType: "webApp"
                     WebAppName: "my-neighbours-blockchain-staging-app-service"
                     packageForLinux: "$(Pipeline.Workspace)/**/*.zip"
-                    RuntimeStack: "NODE|16-lts"
-                    StartupCommand: "node index.js"
+                    ScriptType: "Inline Script"
+                    InlineScript: "node index.js"
+                    enableCustomDeployment: true
+                    DeploymentType: "zipDeploy"
