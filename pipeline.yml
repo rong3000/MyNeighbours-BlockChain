@@ -51,6 +51,6 @@ stages:
                     azureSubscription: "Azure subscription My Neighbours Staging"
                     appType: "webAppLinux"
                     WebAppName: "my-neighbours-blockchain-staging-app-service"
-                    packageForLinux: "$(System.DefaultWorkingDirectory)/**/*.zip"
+                    packageForLinux: "$(Pipeline.Workspace)/**/*.zip"
                     RuntimeStack: "NODE|16-lts"
                     StartupCommand: "node index.js"
