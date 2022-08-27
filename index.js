@@ -130,7 +130,6 @@ async function initializeUser(adminPrivate, userAddress) {
   const r = await tx.wait();
 }
 
-
 async function checkBeforeTransfer(dbResInFunc, res, req, receiver) {
   try {
     let pendingAmount = bigNumber.from('0x0');;

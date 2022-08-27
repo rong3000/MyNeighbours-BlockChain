@@ -11,10 +11,10 @@
   "license": "MIT",
   "dependencies": {
     "cognito-express": "^3.0.1",
-    "ejs": "^2.6.1",
+    "dotenv": "^16.0.1",
+    "ejs": "^3.1.8",
     "ethers": "^5.5.2",
     "express": "^4.16.4",
-    "moment": "^2.22.2",
     "pg": "^8.7.3"
   },
   "devDependencies": {
