@@ -1,7 +1,7 @@
-import { Pool } from 'pg';
+import pg from 'pg';
 
 const load_database_service = async () => {
-    const pool = new Pool({
+    const pool = new pg.Pool({
           connectionString: process.env.POSTGRES_CONNECTION_STRING,
           ssl: {
             rejectUnauthorized: false
