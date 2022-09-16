@@ -49,8 +49,9 @@ stages:
                   inputs:
                     ConnectionType: "AzureRM"
                     azureSubscription: "Azure subscription 1(06a6013b-95aa-4307-aa1e-e958d7327334)"
-                    appType: "webApp"
+                    appType: "webAppLinux"
                     WebAppName: "my-neighbours-blockchain-staging-app-service"
                     packageForLinux: "$(Pipeline.Workspace)/**/*.zip"
-                    WebConfigParameters: "-Handler iisnode -NodeStartFile index.js -appType node"
-                    AppSettings: "-WEBSITE_NODE_DEFAULT_VERSION ~16"
+                    RuntimeStack: "NODE|16-lts"
+                    StartupCommand: "npm run start:staging"
+                    AppSettings: "-PORT $(PORT) -POSTGRES_CONNECTION_STRING $(POSTGRES_CONNECTION_STRING_STAGING) -COGNITO_REGION $(COGNITO_REGION) -COGNITO_USER_POOLID $(COGNITO_USER_POOLID_STAGING) -BLOCK_CHAIN_CONTRACT_ID $(BLOCK_CHAIN_CONTRACT_ID_STAGING) -BLOCK_CHAIN_SERVER_URL $(BLOCK_CHAIN_SERVER_URL_STAGING)"
