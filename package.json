@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "start:staging": "node --experimental-specifier-resolution=node index.js",
-    "start:development:windows": "set NODE_ENV=development&node --experimental-specifier-resolution=node index.js",
-    "start:staging:windows": "set NODE_ENV=staging&node --experimental-specifier-resolution=node index.js",
+    "start:staging": "node --experimental-specifier-resolution=node --experimental-json-modules index.js",
+    "start:development:windows": "set NODE_ENV=development&node --experimental-specifier-resolution=node --experimental-json-modules index.js",
+    "start:staging:windows": "set NODE_ENV=staging&node --experimental-specifier-resolution=node --experimental-json-modules index.js",
     "test": "node test.js"
   },
   "author": "Alex Atallah <alex.atallah@opensea.io>",
