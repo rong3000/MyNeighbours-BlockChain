@@ -21,12 +21,12 @@ export const authorize = (cognitoExpress) => (req, res, next) => {
         let accessTokenFromClient = req.headers.authorization.split(" ")[1];
         cognitoExpress.validate(accessTokenFromClient, function (err, response) {
 
-        //If API is not authenticated, Return 401 with error message. 
-        if (err) return res.status(401).send(err);
+            //If API is not authenticated, Return 401 with error message. 
+            if (err) return res.status(401).send(err);
 
-        //Else API has been authenticated. Proceed.
-        res.locals.user = response;
-        next();
+            //Else API has been authenticated. Proceed.
+            res.locals.user = response;
+            next();
         });
 
     } else {

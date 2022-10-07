@@ -22,7 +22,7 @@ export const get_user_by_id = async (pool, user_id) => {
 }
 
 export const create_user = async (pool, user_id) => {
-    let queryText = `INSERT INTO userwallet5 (username, address, private, balance, availbalance) VALUES ($1::varchar, $2::varchar, $3::varchar, $4::varchar, $5::varchar);`;
+    let queryText = `INSERT INTO userwallet (username, address, private, balance, availbalance) VALUES ($1::varchar, $2::varchar, $3::varchar, $4::varchar, $5::varchar);`;
     
     const result = await pool.query(queryText);
     return result.rows;

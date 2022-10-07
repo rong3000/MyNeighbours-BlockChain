@@ -1,7 +1,7 @@
 {
-  "name": "metadata-api-nodejs",
+  "name": "myneighbours-blockchain",
   "version": "1.0.0",
-  "description": "Sample metadata API for crypto collectibles",
+  "description": "myneighbours-blockchain",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -10,7 +10,7 @@
     "start:staging:windows": "set NODE_ENV=staging&node --experimental-specifier-resolution=node --experimental-json-modules index.js",
     "test": "node test.js"
   },
-  "author": "Alex Atallah <alex.atallah@opensea.io>",
+  "author": "",
   "license": "MIT",
   "dependencies": {
     "cognito-express": "^3.0.1",

@@ -11,10 +11,10 @@ const createService = () => async (context, request, response) => {
             id: results[0].user_id,
             address: results[0].address,
             transactions: results[0].transactionId ? results.map((result) => ({
-                id: result.transactionId,
-                hash: result.transactionHash,
-                status: result.transactionStatus,
-                amount: result.transactionAmount
+                id: result.transactionid,
+                hash: result.transactionhash,
+                status: result.transactionstatus,
+                amount: result.transactionamount
             })): [],
         };
     
