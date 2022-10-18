@@ -1,10 +1,10 @@
 import { get_user_by_id } from '../../../../services/database-service';
 
 const createService = () => async (context, request, response) => {
-    const results = await get_user_by_id(context.db_pool, request.params.userId);
+    const results = await get_user_by_id(context.db_pool, response.locals.user.sub);
 
     if (!results || results.length === 0) {
-        response.send(404, `User with id ${request.params.userId} could not be found`);
+        response.send(404, `User with id ${response.locals.user.sub} could not be found`);
     }
     else {
         const user = {
