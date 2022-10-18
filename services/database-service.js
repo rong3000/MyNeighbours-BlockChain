@@ -15,7 +15,7 @@ const load_database_service = async () => {
 export default load_database_service;
 
 export const get_user_by_id = async (pool, user_id) => {
-    let queryText = `SELECT u.user_id, u.address, t.id as transactionId, t.hash as transactionHash, t.status as transactionStatus, t.amount as transactionAmount FROM userwallet u LEFT JOIN trans t ON (u.user_id = t.user_id) WHERE u.user_id = ${user_id};`;
+    let queryText = `SELECT u.user_id, u.address, t.id as \"transactionId\", t.hash as \"transactionHash\", t.status as \"transactionStatus\", t.amount as \"transactionAmount\" FROM userwallet u LEFT JOIN trans t ON (u.user_id = t.user_id) WHERE u.user_id = \'${user_id}\';`;
     
     const result = await pool.query(queryText);
     return result.rows;
