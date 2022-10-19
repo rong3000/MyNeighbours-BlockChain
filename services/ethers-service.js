@@ -7,6 +7,12 @@ const load_ethers_service = () => {
     const url = process.env.BLOCK_CHAIN_SERVER_URL;
     const provider = new ethers.providers.JsonRpcProvider(url);//chain specific
     let contract = new ethers.Contract(CONTRACT_ID, myToken.abi, provider);
+    return contract;
+}
+
+export const get_chainBal_by_address = async (contract, address) => {
+    const chainBal = await contract.balanceOf(address);
+    return chainBal;
 }
 
 export async function check_availability(user, res) {
