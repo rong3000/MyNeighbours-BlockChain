@@ -7,61 +7,48 @@ const load_ethers_service = () => {
     const url = process.env.BLOCK_CHAIN_SERVER_URL;
     const provider = new ethers.providers.JsonRpcProvider(url);//chain specific
     let contract = new ethers.Contract(CONTRACT_ID, myToken.abi, provider);
-    return contract;
+    return { provider, contract };
 }
 
-export const get_chainBal_by_address = async (contract, address) => {
-    const chainBal = await contract.balanceOf(address);
+export const get_chainBal_by_address = async (ethers_service, address) => {
+    const chainBal = await ethers_service.contract.balanceOf(address);
     return chainBal;
 }
 
-export async function check_availability(user, res) {
+export async function get_available_balance(ethers_service, results) {
     try {
+        const chainBal = await ethers_service.contract.balanceOf(results[0].address);
         let b = [];
 
         let pendingAmount = ethers.BigNumber.from('0x0');
-        let avail = ethers.BigNumber.from('0x0');
+        let availBal = ethers.BigNumber.from('0x0');
 
-        const chainBal = await contract.balanceOf(dbRes.rows[0].address);
-
-        for (row in dbRes.rows) {
+        for (var result of results) {
             let a =
             {
-                'trans_hash': dbRes.rows[row].trans_hash,
-                'trans_status': dbRes.rows[row].trans_status,
-                'trans_amount': dbRes.rows[row].trans_amount
+                'trans_hash': result.transactionHash,
+                'trans_status': result.transactionStatus,
+                'trans_amount': result.transactionAmount
             }
             b.push(a);
-            // console.log(dbRes.rows[row].trans_hash);
-            // console.log(dbRes.rows[row].trans_status);
-            if (dbRes.rows[row].trans_hash != null) {
-                if (dbRes.rows[row].trans_status != 0 && dbRes.rows[row].trans_status != 1) {
+            // console.log(result.transactionHash);
+            // console.log(result.transactionStatus);
+            if (result.transactionHash != null) {
+                if (result.transactionStatus != 0 && result.transactionStatus != 1) {
 
-                let txReceipt = await provider.getTransactionReceipt(dbRes.rows[row].trans_hash);
+                let txReceipt = await ethers_service.provider.getTransactionReceipt(result.transactionHash);
                 if (txReceipt == null) {
-                    pendingAmount = pendingAmount.add(ethers.BigNumber.from(dbRes.rows[row].trans_amount))
-                }
-                if (txReceipt.status == 0 || txReceipt.status == 1) {
+                    pendingAmount = pendingAmount.add(ethers.BigNumber.from(result.transactionAmount))
+                } else if (txReceipt.status == 0 || txReceipt.status == 1) {
                     console.log('mark');
-                    updateTXStatus(txReceipt, dbRes.rows[row].trans_hash);
-                    
+                    updateTXStatus(txReceipt, result.transactionHash);
                 }
                 }
             }
         }
 
-        avail = chainBal.sub(pendingAmount);
-
-        res.send(JSON.stringify({
-            'username': dbRes.rows[0].username,
-            'address': dbRes.rows[0].address,
-            'balance': chainBal._hex,
-            'available balance': avail._hex,
-            'trans': b
-        }));
-
-        return true;
-
+        availBal = chainBal.sub(pendingAmount);
+        return { chainBal, availBal };
     } catch (error) {
         console.log(error);
         res.send(JSON.stringify({
@@ -114,7 +101,7 @@ export async function initialise_user(dbRes, adminPrivate, userAddress) {
 export async function check_before_transfer(dbResInFunc, res, req, receiver) {
     try {
         let pendingAmount = ethers.BigNumber.from('0x0');;
-        let avail = ethers.BigNumber.from('0x0');
+        let availBal = ethers.BigNumber.from('0x0');
 
         let chainBal = await contract.balanceOf(dbResInFunc.rows[0].address);
 
@@ -141,14 +128,14 @@ export async function check_before_transfer(dbResInFunc, res, req, receiver) {
 
 
 
-        avail = chainBal.sub(pendingAmount);
+        availBal = chainBal.sub(pendingAmount);
 
-        if (avail.lt(ethers.BigNumber.from(req.body.amount))) {
+        if (availBal.lt(ethers.BigNumber.from(req.body.amount))) {
 
         res.send(JSON.stringify({
             'sender': res.locals.user.username,
             'balance': chainBal._hex,
-            'available balance': avail._hex,
+            'available balance': availBal._hex,
             'attempted transfer amount': req.body.amount,
             'trans submitted': "fail",
             'if fail reason': "Insuficient available balance"
