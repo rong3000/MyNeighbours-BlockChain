@@ -1,5 +1,4 @@
 import { get_user_by_id } from '../../../../services/database-service';
-import { get_chainBal_by_address } from '../../../../services/ethers-service';
 import { get_available_balance } from '../../../../services/ethers-service';
 
 const createService = () => async (context, request, response) => {

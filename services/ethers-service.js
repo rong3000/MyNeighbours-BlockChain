@@ -1,5 +1,7 @@
 import ethers from 'ethers';
 import myToken from './MyToken.json' assert {type: "json"};
+import { user_init_db } from './database-service';
+import { updateTXStatus } from './database-service';
 
 const load_ethers_service = () => {
 
@@ -51,51 +53,36 @@ export async function get_available_balance(ethers_service, results) {
         return { chainBal, availBal };
     } catch (error) {
         console.log(error);
-        res.send(JSON.stringify({
-            'transSubmitted': "fail",
-            'error reason': error.reason,
-            'error code': error.code
-        }));
+        //TODO update error handling
+
+        // res.send(JSON.stringify({
+        //     'transSubmitted': "fail",
+        //     'error reason': error.reason,
+        //     'error code': error.code
+        // }));
 
         return false;
     }
 }
 
-export async function initialise_user(dbRes, adminPrivate, userAddress) {
-    let signer = new ethers.Wallet(adminPrivate, provider);
+export async function user_init_chain(context, user_id, userAddress) {
+    
+    //get admin private
+    const adminPrivate = process.env.ADMIN_PRIVATE;
+
+    let signer = new ethers.Wallet(adminPrivate, context.ethers_service.provider);
     const tx = await signer.sendTransaction({
         to: userAddress,
         value: ethers.utils.parseEther("0.01")
     });
-
-    //write tx information into table TRANS_TEST
-    pool.connect((err, client, done) => {
-        if (err) {
-        console.log('err is ', err);
-        }
-
-        client.query("INSERT INTO TRANS_TEST (TRANS_HASH, TRANS_STATUS, TRANS_AMOUNT, USER_ID) VALUES ($1::varchar, $2::int, $3::varchar, $4::int);",
-        [tx.hash,
-            2,
-            "0x2386F26FC10000",
-        dbRes.rows[0].id
-        ], (err, res) => {
-            done()
-            if (err) {
-            console.log(err.stack)
-            } else {
-            // console.log('data inserted into trans db are ', tx.hash,
-            //   2,
-            //   req.body.amount,
-            //   dbRes.rows[0].id);
-            console.log('inserted into Trans db without error', res.command, ' ', res.rowCount);
-            }
-        })
-    });
-
+    console.log('tx is ', tx);
     const receipt = await tx.wait();
-    //write tx confirmation into table TRANS_TEST
-    updateTXStatus(receipt, tx.hash);
+    console.log('receipt is ', receipt);
+    ////write tx into table trans_init_eth
+    user_init_db(context.db_pool, tx.hash, user_id);
+
+    //write tx confirmation into table trans_init_eth
+    updateTXStatus(context.db_pool, receipt, tx.hash);
 }
 
 export async function check_before_transfer(dbResInFunc, res, req, receiver) {
