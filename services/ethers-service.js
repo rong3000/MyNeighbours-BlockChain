@@ -1,6 +1,9 @@
 import ethers from 'ethers';
 import myToken from './MyToken.json' assert {type: "json"};
 import { user_init_db } from './database-service';
+import { tx_db } from './database-service';
+
+import { update_ETH_TX_Status } from './database-service';
 import { updateTXStatus } from './database-service';
 
 const load_ethers_service = () => {
@@ -9,7 +12,7 @@ const load_ethers_service = () => {
     const url = process.env.BLOCK_CHAIN_SERVER_URL;
     const provider = new ethers.providers.JsonRpcProvider(url);//chain specific
     let contract = new ethers.Contract(CONTRACT_ID, myToken.abi, provider);
-    return { provider, contract };
+    return { CONTRACT_ID, provider, contract };
 }
 
 export const get_chainBal_by_address = async (ethers_service, address) => {
@@ -38,13 +41,13 @@ export async function get_available_balance(ethers_service, results) {
             if (result.transactionHash != null) {
                 if (result.transactionStatus != 0 && result.transactionStatus != 1) {
 
-                let txReceipt = await ethers_service.provider.getTransactionReceipt(result.transactionHash);
-                if (txReceipt == null) {
-                    pendingAmount = pendingAmount.add(ethers.BigNumber.from(result.transactionAmount))
-                } else if (txReceipt.status == 0 || txReceipt.status == 1) {
-                    console.log('mark');
-                    updateTXStatus(txReceipt, result.transactionHash);
-                }
+                    let txReceipt = await ethers_service.provider.getTransactionReceipt(result.transactionHash);
+                    if (txReceipt == null) {
+                        pendingAmount = pendingAmount.add(ethers.BigNumber.from(result.transactionAmount))
+                    } else if (txReceipt.status == 0 || txReceipt.status == 1) {
+                        console.log('mark');
+                        updateTXStatus(txReceipt, result.transactionHash);
+                    }
                 }
             }
         }
@@ -66,7 +69,7 @@ export async function get_available_balance(ethers_service, results) {
 }
 
 export async function user_init_chain(context, user_id, userAddress) {
-    
+
     //get admin private
     const adminPrivate = process.env.ADMIN_PRIVATE;
 
@@ -76,11 +79,35 @@ export async function user_init_chain(context, user_id, userAddress) {
         value: ethers.utils.parseEther("0.01")
     });
     console.log('tx is ', tx);
-    const receipt = await tx.wait();
-    console.log('receipt is ', receipt);
     ////write tx into table trans_init_eth
     user_init_db(context.db_pool, tx.hash, user_id);
 
+
+    const receipt = await tx.wait();
+    console.log('receipt is ', receipt);
+    //write tx confirmation into table trans_init_eth
+    update_ETH_TX_Status(context.db_pool, receipt, tx.hash);
+}
+
+
+export async function contract_transfer(context, sender, receiver, amount) {
+
+    //get sender private
+    let signer = new ethers.Wallet(sender[0].private, context.ethers_service.provider);
+    let contractWithSigner = new ethers.Contract(context.ethers_service.CONTRACT_ID, myToken.abi, signer);
+
+    //init tx
+    try {
+        const tx = await contractWithSigner.transfer(receiver[0].address, amount);
+        ////write tx into table trans
+        tx_db(context.db_pool, tx.hash, amount, sender[0].user_id);
+        return tx;
+    } catch (error) {
+        console.log(error);
+    }
+
+    const receipt = await tx.wait();
+    console.log('receipt is ', receipt);
     //write tx confirmation into table trans_init_eth
     updateTXStatus(context.db_pool, receipt, tx.hash);
 }
@@ -93,24 +120,24 @@ export async function check_before_transfer(dbResInFunc, res, req, receiver) {
         let chainBal = await contract.balanceOf(dbResInFunc.rows[0].address);
 
         for (row in dbResInFunc.rows) {
-        if (dbResInFunc.rows[row].trans_hash != null) {
-            if (dbResInFunc.rows[row].trans_status != 0 && dbResInFunc.rows[row].trans_status != 1) {
-            console.log("dbResInFunc.rows[row] ", dbResInFunc.rows[row]);
-            let txReceipt = await provider.getTransactionReceipt(dbResInFunc.rows[row].trans_hash);
-            if (txReceipt == null) {
-                pendingAmount = pendingAmount.add(ethers.BigNumber.from(dbResInFunc.rows[row].trans_amount))
-            }
-            // else {
-            //   updateTXStatus(txReceipt, dbResInFunc.rows[row]);
+            if (dbResInFunc.rows[row].trans_hash != null) {
+                if (dbResInFunc.rows[row].trans_status != 0 && dbResInFunc.rows[row].trans_status != 1) {
+                    console.log("dbResInFunc.rows[row] ", dbResInFunc.rows[row]);
+                    let txReceipt = await provider.getTransactionReceipt(dbResInFunc.rows[row].trans_hash);
+                    if (txReceipt == null) {
+                        pendingAmount = pendingAmount.add(ethers.BigNumber.from(dbResInFunc.rows[row].trans_amount))
+                    }
+                    // else {
+                    //   updateTXStatus(txReceipt, dbResInFunc.rows[row]);
 
-            // }
-            if (txReceipt.status == 0 || txReceipt.status == 1) {
-                console.log('mark');
-                updateTXStatus(txReceipt, dbResInFunc.rows[row].trans_hash);
-                
+                    // }
+                    if (txReceipt.status == 0 || txReceipt.status == 1) {
+                        console.log('mark');
+                        updateTXStatus(txReceipt, dbResInFunc.rows[row].trans_hash);
+
+                    }
+                }
             }
-            }
-        }
         }
 
 
@@ -119,27 +146,28 @@ export async function check_before_transfer(dbResInFunc, res, req, receiver) {
 
         if (availBal.lt(ethers.BigNumber.from(req.body.amount))) {
 
-        res.send(JSON.stringify({
-            'sender': res.locals.user.username,
-            'balance': chainBal._hex,
-            'available balance': availBal._hex,
-            'attempted transfer amount': req.body.amount,
-            'trans submitted': "fail",
-            'if fail reason': "Insuficient available balance"
-        }));
+            res.send(JSON.stringify({
+                'sender': res.locals.user.username,
+                'balance': chainBal._hex,
+                'available balance': availBal._hex,
+                'attempted transfer amount': req.body.amount,
+                'trans submitted': "fail",
+                'if fail reason': "Insuficient available balance"
+            }));
         } else {
-        let signer = new ethers.Wallet(dbResInFunc.rows[0].private, provider);
-        contractTransfer(signer, res, req, dbResInFunc, receiver);
+            let signer = new ethers.Wallet(dbResInFunc.rows[0].private, provider);
+            contractTransfer(signer, res, req, dbResInFunc, receiver);
         }
     } catch (error) {
         res.send(JSON.stringify({
-        'transSubmitted': "fail",
-        'error reason': error.reason,
-        'error code': error.code
+            'transSubmitted': "fail",
+            'error reason': error.reason,
+            'error code': error.code
         }));
     }
 }
 
+/*
 export async function contract_transfer(signer, res, req, dbRes, receiver) {
     let contractWithSigner = new ethers.Contract(CONTRACT_ID, Contract.abi, signer);
     try {
@@ -190,5 +218,5 @@ export async function contract_transfer(signer, res, req, dbRes, receiver) {
         }));
     }
 }
-
+*/
 export default load_ethers_service;
