@@ -9,6 +9,8 @@ import express from 'express';
 import { resolve, join } from 'path';
 import load_modules from './common/module_loader';
 import load_database_service from './services/database-service';
+import https from 'https';
+import fs from 'fs';
 
 load_dotenv_service();
 const cognito_express = load_cognito_service();
@@ -39,6 +41,15 @@ route.get("/health-check", function (req, res, next) {
 app.listen(app.get('port'), function () {
   console.log('Node app is running on port', app.get('port'));
 })
+
+const options = {
+  key: fs.readFileSync("./certs/localhost.key"),
+  cert: fs.readFileSync("./certs/localhost.crt"),
+};
+
+https.createServer(options, app).listen(process.env.HTTPS_PORT || 3001, () => {
+  console.log('HTTPS server started on port', process.env.HTTPS_PORT || 3001);
+});
 
 // const express = require('express')
 // const CognitoExpress = require("cognito-express")

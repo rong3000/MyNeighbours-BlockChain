@@ -1,4 +1,5 @@
 import pg from 'pg';
+import groupBy from '../common/group_by';
 
 const load_database_service = async () => {
     const pool = new pg.Pool({
@@ -6,7 +7,8 @@ const load_database_service = async () => {
         ssl: {
             rejectUnauthorized: false
         },
-        max: 10
+        max: 10,
+        ssl: process.env.POSTGRES_CONNECTION_STRING.indexOf('localhost') ? false : true
     });
 
     return await pool.connect();
@@ -15,10 +17,25 @@ const load_database_service = async () => {
 export default load_database_service;
 
 export const get_user_by_id = async (pool, user_id) => {
-    let queryText = `SELECT u.user_id, u.address, u.private, t.id as \"transactionId\", t.hash as \"transactionHash\", t.status as \"transactionStatus\", t.amount as \"transactionAmount\" FROM userwallet u LEFT JOIN trans t ON (u.user_id = t.user_id) WHERE u.user_id = \'${user_id}\';`;
+    let queryText = `
+    SELECT 
+        u.user_id, 
+        u.address, 
+        u.private, 
+        t.id as \"transactionId\", 
+        t.hash as \"transactionHash\", 
+        t.status as \"transactionStatus\", 
+        t.amount as \"transactionAmount\" 
+    FROM userwallet u LEFT JOIN trans t ON (u.user_id = t.user_id) 
+    WHERE u.user_id = \'${user_id}\';`;
 
     const result = await pool.query(queryText);
-    return result.rows;
+    if (result.rowCount > 0) {
+        return groupBy(result.rows, ['user_id', 'address', 'private'])[0];
+    }
+    else {
+        return undefined;
+    }
 }
 
 export const create_user = async (pool, address, privateKey, user_id) => {

@@ -4,23 +4,32 @@ import { contract_transfer } from '../../../../services/ethers-service';
 import ethers from 'ethers';
 var bigNumber = ethers.BigNumber;//chain specific
 
+/**
+ * body 
+ * {
+ *  receiver,
+ *  amount
+ * }
+ */
+
 const createService = () => async (context, request, response) => {
 
     const sender = await get_user_by_id(context.db_pool, response.locals.user.sub);
-    const receiver = await get_user_by_id(context.db_pool, response.locals.user.sub);
+    const receiver = await get_user_by_id(context.db_pool, response.body.receiver);
 
     if ((!!sender && sender.length > 0) && (!!receiver && receiver.length > 0)) {
         //both users exist
         //check sender balance
         let { chainBal, availBal } = await get_available_balance(context.ethers_service, sender);
-        if (availBal.lt(bigNumber.from(request.body.amount))) {
+        const requestAmount = bigNumber.from(request.body.amount);
+        if (availBal.lt(requestAmount)) {
             response.send(JSON.stringify({
                 'sender': response.locals.user.sub,
-                'balance': chainBal._hex,
-                'available balance': availBal._hex,
-                'attempted transfer amount': request.body.amount,
-                'trans submitted': "fail",
-                'if fail reason': "Insuficient available balance"
+                'balance': chainBal.toString(),
+                'availableBalance': availBal.toString(),
+                'attemptedTransferAmount': requestAmount.toString(),
+                'transSubmitted': "fail",
+                'failReason': "Insuficient available balance"
             }));
         } else {
             const tx = await contract_transfer(context, sender, receiver, request.body.amount);

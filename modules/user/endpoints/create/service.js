@@ -1,20 +1,31 @@
 import { get_user_by_id } from '../../../../services/database-service';
 import { create_user } from '../../../../services/database-service';
 import ethers from 'ethers';
-import { user_init_chain } from '../../../../services/ethers-service';
 
 // import { get_available_balance } from '../../../../services/ethers-service';
 
 const createService = () => async (context, request, response) => {
-  const results = await get_user_by_id(context.db_pool, response.locals.user.sub);
+  const userId = response.locals.user.sub
+
+  if (!userId) {
+    response.send(404, 
+      JSON.stringify({
+      errorCode: 0,
+      errorMessage: "SSO user id is not provided",
+      errorDetail: "SSO user id is not provided"
+    }));
+    return;
+  }
+
+  const results = await get_user_by_id(context.db_pool, userId);
 
   if (!results || results.length === 0) {
-    console.log(`User with id ${response.locals.user.sub} to be created`);
+    console.log(`User with id ${userId} to be created`);
 
     //create new user wallet address
     let randomWallet = ethers.Wallet.createRandom();
 
-    const results = await create_user(context.db_pool, randomWallet.address, randomWallet.privateKey, response.locals.user.sub);
+    const results = await create_user(context.db_pool, randomWallet.address, randomWallet.privateKey, userId);
 
     
     if (results.error) {
@@ -29,14 +40,11 @@ const createService = () => async (context, request, response) => {
       response.send(200, 
         JSON.stringify({
         userCreated: results.result.rowCount,
-        id: response.locals.user.sub,
+        id: userId,
         address: randomWallet.address,
-        balance: '0x0',
-        availbalance: '0x0'
+        balance: '0',
+        availBalance: '0'
       }));
-
-      //initialize user account by sending them some eth
-      user_init_chain(context, response.locals.user.sub, randomWallet.address);
       
     }
     //ref
