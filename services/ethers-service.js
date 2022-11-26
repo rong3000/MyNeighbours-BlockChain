@@ -21,10 +21,9 @@ export const get_chainBal_by_address = async (ethers_service, address) => {
     return chainBal;
 }
 
-export async function get_available_balance(db_pool, ethers_service, user) {
+export async function get_available_balance(knex, ethers_service, user) {
     try {
-        const chainBal = await ethers_service.provider.getBalance(user.key.address);
-        let b = [];
+        const chainBal = await ethers_service.contract.balanceOf(user.key.address);
 
         let pendingAmount = ethers.BigNumber.from('0x0');
         let availBal = ethers.BigNumber.from('0x0');
@@ -35,7 +34,7 @@ export async function get_available_balance(db_pool, ethers_service, user) {
                 if (txReceipt == null) {
                     pendingAmount = pendingAmount.add(ethers.BigNumber.from(transaction.transactionAmount))
                 } else if (txReceipt.status == 0 || txReceipt.status == 1) {
-                    updateTXStatus(db_pool, txReceipt, transaction.transactionHash);
+                    updateTXStatus(knex, txReceipt, transaction.transactionHash);
                 }
             }
         }
@@ -62,8 +61,6 @@ export async function user_init_chain(context, user_id, userAddress) {
         //get admin private
         const adminPrivate = process.env.ADMIN_PRIVATE;
 
-        context.ethers_service.provider.pollingInterval = 1000;
-
         let signer = new ethers.Wallet(adminPrivate, context.ethers_service.provider);
         const tx = await signer.sendTransaction({
             to: userAddress,
@@ -71,7 +68,7 @@ export async function user_init_chain(context, user_id, userAddress) {
         });
         console.log('tx is ', tx);
         ////write tx into table trans_init_eth
-        await user_init_db(context.db_pool, tx.hash, user_id);
+        await user_init_db(context.knex, tx.hash, user_id);
 
         try {
             const receipt = await tx.wait();
@@ -89,7 +86,7 @@ export async function user_init_chain(context, user_id, userAddress) {
 }
 
 
-export async function contract_transfer(context, sender, receiver, amount, isInitial = false) {
+export async function contract_transfer(context, sender, receiver, amount) {
 
     //get sender private
     let signer = new ethers.Wallet(sender.private, context.ethers_service.provider);
@@ -97,14 +94,8 @@ export async function contract_transfer(context, sender, receiver, amount, isIni
 
     //init tx
     try {
-        const tx = await contractWithSigner.transfer(receiver[0].address, amount);
-        ////write tx into table trans
-        if (isInitial) {
-            await user_init_db(context.db_pool, tx.hash, sender.user_id);
-        }
-        else {
-            await tx_db(context.db_pool, tx.hash, amount, sender.user_id);
-        }
+        const tx = await contractWithSigner.transfer(receiver.address, amount);
+        await tx_db(context.knex, tx.hash, amount, sender.user_id);
         return tx;
     } catch (error) {
         console.log(error);
