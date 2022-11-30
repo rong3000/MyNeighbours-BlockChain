@@ -74,7 +74,7 @@ export async function user_init_chain(context, user_id, userAddress) {
             const receipt = await tx.wait();
             console.log('receipt is ', receipt);
             //write tx confirmation into table trans_init_eth
-            await update_ETH_TX_Status(context.db_pool, receipt, tx.hash);
+            await update_ETH_TX_Status(context.knex, receipt, tx.hash);
         }
         catch (e) {
             console.log(e);
