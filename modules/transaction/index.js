@@ -1,4 +1,4 @@
-import load_endpoints from '../../common/endpoint_loader';
+import load_endpoints from '../../common/endpoint-loader';
 
 const createModule = async (moduleDirectory, context) => {
     await load_endpoints(moduleDirectory, context);

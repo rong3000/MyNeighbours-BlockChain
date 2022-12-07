@@ -7,11 +7,11 @@
     "start": "node index.js",
     "start:staging": "node --experimental-specifier-resolution=node --experimental-json-modules index.js",
     "start:development:windows": "set NODE_ENV=development&node --experimental-specifier-resolution=node --experimental-json-modules index.js",
-    "start:staging:windows": "set NODE_ENV=staging&node --experimental-specifier-resolution=node --experimental-json-modules index.js",
+    "start:preprod:windows": "set NODE_ENV=preprod&node --experimental-specifier-resolution=node --experimental-json-modules index.js",
     "test": "node test.js",
     "knex:init": "knex init",
     "knex:make": "knex migrate:make --knexfile knexfile.cjs",
-    "knex:migrate:latest": "knex migrate:latest --knexfile knexfile.cjs",
+    "knex:migrate:latest": "knex migrate:latest --knexfile knexfile.cjs --env preprod",
     "knex:up": "knex up",
     "knex:down": "knex down"
   },
@@ -25,11 +25,14 @@
     "ethers": "^5.5.2",
     "express": "^4.16.4",
     "knex": "^2.3.0",
-    "pg": "^8.8.0"
+    "pg": "^8.8.0",
+    "winston": "^3.8.2",
+    "winston-cloudwatch": "^6.1.1"
   },
   "devDependencies": {
     "request": "^2.81.0",
-    "tape": "^4.7.0"
+    "tape": "^4.7.0",
+    "tslib": "^2.4.1"
   },
   "engines": {
     "node": "16.17.0"

@@ -113,7 +113,7 @@ exports.up = async function(knex) {
     await knex.raw(`ALTER TABLE ONLY public.trans
     ADD CONSTRAINT trans_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.userwallet(user_id);`);
 
-    await knex.raw(`INSERT INTO userwallet (address, private, user_id) VALUES (\'${process.env.ADMIN_ADDRESS}\', \'${process.env.ADMIN_PRIVATE}\', \'${ADMIN_USER_ID}\');`);
+    await knex.raw(`INSERT INTO userwallet (address, private, user_id) VALUES (\'${process.env.ADMIN_ADDRESS}\', \'${process.env.ADMIN_PRIVATE}\', \'${process.env.ADMIN_USER_ID}\');`);
 };
 
 exports.down = async function(knex) {

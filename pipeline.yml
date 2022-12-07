@@ -32,13 +32,13 @@ stages:
             artifact: drop
 
   - stage: Deploy
-    displayName: Deploy stage
+    displayName: Deploy Preprod
     dependsOn: Build
     condition: succeeded()
     jobs:
       - deployment: Deploy
         displayName: Deploy
-        environment: "MyNeighbours_BlockChain_Environment_Staging"
+        environment: "MyNeighbours_BlockChain_Environment_Preprod"
         pool:
           vmImage: ubuntu-latest
         strategy:
@@ -50,8 +50,32 @@ stages:
                     ConnectionType: "AzureRM"
                     azureSubscription: "Azure subscription 1(06a6013b-95aa-4307-aa1e-e958d7327334)"
                     appType: "webAppLinux"
-                    WebAppName: "my-neighbours-blockchain-staging-app-service"
+                    WebAppName: "my-neighbours-blockchain-preprod-app-service"
                     packageForLinux: "$(Pipeline.Workspace)/**/*.zip"
                     RuntimeStack: "NODE|16-lts"
-                    StartupCommand: "npm run start:staging"
-                    AppSettings: "-NODE_ENV staging -PORT $(PORT) -POSTGRES_CONNECTION_STRING $(POSTGRES_CONNECTION_STRING_STAGING) -COGNITO_REGION $(COGNITO_REGION) -COGNITO_USER_POOLID $(COGNITO_USER_POOLID_STAGING) -BLOCK_CHAIN_CONTRACT_ID $(BLOCK_CHAIN_CONTRACT_ID_STAGING) -BLOCK_CHAIN_SERVER_URL $(BLOCK_CHAIN_SERVER_URL_STAGING)"
+                    StartupCommand: "npm run start:preprod"
+                    AppSettings: "-NODE_ENV preprod -PORT $(PORT) -POSTGRES_CONNECTION_STRING $(POSTGRES_CONNECTION_STRING_PREPROD) -COGNITO_REGION $(COGNITO_REGION) -COGNITO_USER_POOLID $(COGNITO_USER_POOLID_PREPROD) -BLOCK_CHAIN_CONTRACT_ID $(BLOCK_CHAIN_CONTRACT_ID_PREPROD) -BLOCK_CHAIN_SERVER_URL $(BLOCK_CHAIN_SERVER_URL_PREPROD) -ADMIN_USER_ID $(ADMIN_USER_ID_PREPROD) -ADMIN_ADDRESS $(ADMIN_ADDRESS_PREPROD) -ADMIN_PRIVATE $(ADMIN_PRIVATE_PREPROD) -CLOUDWATCH_GROUP_NAME $(CLOUDWATCH_GROUP_NAME) -CLOUDWATCH_ACCESS_KEY $(CLOUDWATCH_ACCESS_KEY) -CLOUDWATCH_SECRET_ACCESS_KEY $(CLOUDWATCH_SECRET_ACCESS_KEY) -CLOUDWATCH_REGION $(CLOUDWATCH_REGION)"
+  - stage: Deploy
+    displayName: Deploy Production
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: Deploy
+        displayName: Deploy
+        environment: "MyNeighbours_BlockChain_Environment_Production"
+        pool:
+          vmImage: ubuntu-latest
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureRmWebAppDeployment@4
+                  inputs:
+                    ConnectionType: "AzureRM"
+                    azureSubscription: "Azure subscription 1(06a6013b-95aa-4307-aa1e-e958d7327334)"
+                    appType: "webAppLinux"
+                    WebAppName: "my-neighbours-blockchain-production-app-service"
+                    packageForLinux: "$(Pipeline.Workspace)/**/*.zip"
+                    RuntimeStack: "NODE|16-lts"
+                    StartupCommand: "npm run start:production"
+                    AppSettings: "-NODE_ENV production -PORT $(PORT) -POSTGRES_CONNECTION_STRING $(POSTGRES_CONNECTION_STRING_PRODUCTION) -COGNITO_REGION $(COGNITO_REGION) -COGNITO_USER_POOLID $(COGNITO_USER_POOLID_PRODUCTION) -BLOCK_CHAIN_CONTRACT_ID $(BLOCK_CHAIN_CONTRACT_ID_PRODUCTION) -BLOCK_CHAIN_SERVER_URL $(BLOCK_CHAIN_SERVER_URL_PRODUCTION) -ADMIN_USER_ID $(ADMIN_USER_ID_PRODUCTION) -ADMIN_ADDRESS $(ADMIN_ADDRESS_PRODUCTION) -ADMIN_PRIVATE $(ADMIN_PRIVATE_PRODUCTION) -CLOUDWATCH_GROUP_NAME $(CLOUDWATCH_GROUP_NAME) -CLOUDWATCH_ACCESS_KEY $(CLOUDWATCH_ACCESS_KEY) -CLOUDWATCH_SECRET_ACCESS_KEY $(CLOUDWATCH_SECRET_ACCESS_KEY) -CLOUDWATCH_REGION $(CLOUDWATCH_REGION)"

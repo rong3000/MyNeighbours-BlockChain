@@ -2,6 +2,7 @@ import { get_user_by_id } from '../../../../services/database-service';
 import { create_user } from '../../../../services/database-service';
 import ethers from 'ethers';
 import {user_init_chain} from '../../../../services/ethers-service';
+import logger from '../../../../services/logger-service';
 
 const createService = () => async (context, request, response) => {
   const ssoUserId = response.locals.user.sub;
@@ -19,7 +20,7 @@ const createService = () => async (context, request, response) => {
   const results = await get_user_by_id(context.knex, ssoUserId);
 
   if (!results || results.length === 0) {
-    console.log(`User with id ${ssoUserId} to be created`);
+    //console.log(`User with id ${ssoUserId} to be created`);
 
     //create new user wallet address
     let randomWallet = ethers.Wallet.createRandom();
@@ -46,6 +47,10 @@ const createService = () => async (context, request, response) => {
         balance: '0',
         availBalance: '0'
       }));
+
+      context.logger.log(
+        'info',
+        `User with id ${response.locals.user.sub} already exists`);
     }
   }
   else {

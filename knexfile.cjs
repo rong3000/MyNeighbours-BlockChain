@@ -26,7 +26,7 @@ module.exports = {
     }
   },
 
-  staging: {
+  preprod: {
     client: 'postgresql',
     connection: process.env.POSTGRES_CONNECTION_STRING,
     pool: {

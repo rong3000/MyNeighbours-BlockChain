@@ -1,5 +1,5 @@
 import ethers from 'ethers';
-import myToken from './MyToken.json' assert {type: "json"};
+import community_token_contract from './community-token-contract.json' assert {type: "json"};
 import { tx_db, user_init_db } from './database-service';
 
 import { update_ETH_TX_Status } from './database-service';
@@ -12,7 +12,8 @@ const load_ethers_service = () => {
     const provider = new ethers.providers.JsonRpcProvider(process.env.BLOCK_CHAIN_SERVER_URL);
     provider.on("debug", console.log);
 
-    let contract = new ethers.Contract(CONTRACT_ID, myToken.abi, provider);
+    let contract = new ethers.Contract(CONTRACT_ID, community_token_contract.abi, provider);
+
     return { CONTRACT_ID, provider, contract };
 }
 
@@ -43,14 +44,6 @@ export async function get_available_balance(knex, ethers_service, user) {
         return { chainBal, availBal };
     } catch (error) {
         console.log(error);
-        //TODO update error handling
-
-        // res.send(JSON.stringify({
-        //     'transSubmitted': "fail",
-        //     'error reason': error.reason,
-        //     'error code': error.code
-        // }));
-
         return false;
     }
 }
@@ -90,7 +83,7 @@ export async function contract_transfer(context, sender, receiver, amount) {
 
     //get sender private
     let signer = new ethers.Wallet(sender.private, context.ethers_service.provider);
-    let contractWithSigner = new ethers.Contract(context.ethers_service.CONTRACT_ID, myToken.abi, signer);
+    let contractWithSigner = new ethers.Contract(context.ethers_service.CONTRACT_ID, community_token_contract.abi, signer);
 
     //init tx
     try {
@@ -162,56 +155,4 @@ export async function check_before_transfer(dbResInFunc, res, req, receiver) {
     }
 }
 
-/*
-export async function contract_transfer(signer, res, req, dbRes, receiver) {
-    let contractWithSigner = new ethers.Contract(CONTRACT_ID, Contract.abi, signer);
-    try {
-        const tx = await contractWithSigner.transfer(receiver, req.body.amount);
-        let availableBalance = (ethers.BigNumber.from(dbRes.rows[0].availbalance).sub(ethers.BigNumber.from(req.body.amount)))._hex;
-        res.send(JSON.stringify({
-        'transSubmitted': "success",
-        'transHash': tx.hash,
-        }));
-
-        //write tx information into table TRANS_TEST
-        pool.connect((err, client, done) => {
-        if (err) {
-            console.log('err is ', err);
-        }
-
-        client.query("INSERT INTO TRANS_TEST (TRANS_HASH, TRANS_STATUS, TRANS_AMOUNT, USER_ID) VALUES ($1::varchar, $2::int, $3::varchar, $4::int);",
-            [tx.hash,
-            2,
-            req.body.amount,
-            dbRes.rows[0].id
-            ], (err, res) => {
-            done()
-            if (err) {
-                console.log(err.stack)
-            } else {
-                // console.log('data inserted into trans db are ', tx.hash,
-                //   2,
-                //   req.body.amount,
-                //   dbRes.rows[0].id);
-                console.log('inserted into Trans db without error', res.command, ' ', res.rowCount);
-            }
-            })
-        })
-
-        const receipt = await tx.wait();
-        // console.log('receipt is ', receipt);
-
-        //write tx confirmation into table TRANS_TEST
-        updateTXStatus(receipt, tx.hash);
-
-    } catch (error) {
-        console.log(error);
-        res.send(JSON.stringify({
-        'transSubmitted': "fail",
-        'error reason': error.reason,
-        'error code': error.code
-        }));
-    }
-}
-*/
 export default load_ethers_service;
