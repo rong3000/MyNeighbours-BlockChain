@@ -9,7 +9,7 @@ const createService = () => async (context, request, response) => {
         response.send(404, `User with id ${response.locals.user.sub} could not be found`);
     }
     else {
-        let {chainBal, availBal} = await get_available_balance(context.db_pool, context.ethers_service, user);
+        let {chainBal, availBal} = await get_available_balance(context.knex, context.ethers_service, user);
         const responseBody = {
             id: user.key.user_id,
             address: user.key.address,

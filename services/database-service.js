@@ -96,7 +96,7 @@ export const update_ETH_TX_Status = async (knex, receipt, hash) => {
         const result = await knex('trans_init_eth')
             .where('hash', hash)
             .update({
-                TRANS_STATUS: receipt ? receipt.status : '3'
+                status: receipt ? receipt.status : '3'
             });
 
         return {
@@ -116,9 +116,9 @@ export const update_ETH_TX_Status = async (knex, receipt, hash) => {
 export const updateTXStatus = async (knex, receipt, hash) => {
     try {
         const result = await knex('trans')
-            .where('TRANS_HASH', hash)
+            .where('hash', hash)
             .update({
-                TRANS_STATUS: receipt ? receipt.status : '3'
+                status: receipt ? receipt.status : '3'
             });
 
         return {

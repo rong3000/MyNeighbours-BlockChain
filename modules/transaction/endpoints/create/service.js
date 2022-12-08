@@ -1,7 +1,7 @@
 import { get_user_by_id, get_user_with_transaction_by_id } from '../../../../services/database-service';
-import { get_available_balance } from '../../../../services/ethers-service';
+import { get_available_balance, get_eth, send_eth } from '../../../../services/ethers-service';
 import { contract_transfer } from '../../../../services/ethers-service';
-import ethers from 'ethers';
+import ethers, { BigNumber } from 'ethers';
 var bigNumber = ethers.BigNumber;//chain specific
 
 /**
@@ -15,20 +15,23 @@ var bigNumber = ethers.BigNumber;//chain specific
 
 const createService = () => async (context, request, response) => {
 
-    const senderAddress = request.body.isFromAdmin ? process.env.ADMIN_ADDRESS : response.locals.user.sub;
-    const receiverAddress = request.body.receiver;
+    const senderId = request.body.isFromAdmin ? process.env.ADMIN_ID : response.locals.user.sub;
+    const receiverId = request.body.receiver;
 
-    const sender = request.body.isFromAdmin ? 
-    {
-        key: {
-            user_id: process.env.ADMIN_USER_ID,
-            address: process.env.ADMIN_ADDRESS,
-            private: process.env.ADMIN_PRIVATE
-        },
-        value: []
+    const sender = await get_sender(context, request.body.isFromAdmin, senderId);
+
+    if (sender) {
+        const sender_eth = await get_eth(context.ethers_service, sender.key.address);
+        if (sender_eth == 0) {
+            const isSendEthSucceeded = await send_eth(context, senderId, sender.key.address);
+
+            if (!isSendEthSucceeded) {
+                context.logger.log('error', 'Insuffient eth to send token');
+            }
+        }
     }
-    : await get_user_with_transaction_by_id(context.knex, senderAddress);
-    const receiver = await get_user_by_id(context.knex, receiverAddress);
+
+    const receiver = await get_user_by_id(context.knex, receiverId);
 
     if (sender && receiver) {
         let { chainBal, availBal } = await get_available_balance(context.knex, context.ethers_service, sender);
@@ -54,5 +57,18 @@ const createService = () => async (context, request, response) => {
         response.send(404, `one of the user or both users cannot be found, please check and try again`);
     }
 };
+
+async function get_sender(context, isFromAdmin, senderAddress) {
+    return isFromAdmin ? 
+    {
+        key: {
+            user_id: process.env.ADMIN_USER_ID,
+            address: process.env.ADMIN_ADDRESS,
+            private: process.env.ADMIN_PRIVATE
+        },
+        value: []
+    }
+    : await get_user_with_transaction_by_id(context.knex, senderAddress);
+}
 
 export default createService;

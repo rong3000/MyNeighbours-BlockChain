@@ -48,7 +48,11 @@ export async function get_available_balance(knex, ethers_service, user) {
     }
 }
 
-export async function user_init_chain(context, user_id, userAddress) {
+export async function get_eth(ethers_service, userAddress) {
+    return await ethers_service.provider.getBalance(userAddress);
+}
+
+export async function send_eth(context, user_id, userAddress) {
 
     try {
         //get admin private
@@ -68,13 +72,19 @@ export async function user_init_chain(context, user_id, userAddress) {
             console.log('receipt is ', receipt);
             //write tx confirmation into table trans_init_eth
             await update_ETH_TX_Status(context.knex, receipt, tx.hash);
+
+            return true;
         }
         catch (e) {
             console.log(e);
+
+            return false;
         }
     }
     catch (e) {
         console.log(e);
+
+        return false;
     }
 }
 
@@ -97,7 +107,7 @@ export async function contract_transfer(context, sender, receiver, amount) {
     const receipt = await tx.wait();
     console.log('receipt is ', receipt);
     //write tx confirmation into table trans_init_eth
-    updateTXStatus(context.db_pool, receipt, tx.hash);
+    updateTXStatus(context.knex, receipt, tx.hash);
 }
 
 export async function check_before_transfer(dbResInFunc, res, req, receiver) {

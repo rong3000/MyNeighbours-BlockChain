@@ -1,8 +1,7 @@
 import { get_user_by_id } from '../../../../services/database-service';
 import { create_user } from '../../../../services/database-service';
 import ethers from 'ethers';
-import {user_init_chain} from '../../../../services/ethers-service';
-import logger from '../../../../services/logger-service';
+import {send_eth} from '../../../../services/ethers-service';
 
 const createService = () => async (context, request, response) => {
   const ssoUserId = response.locals.user.sub;
@@ -36,7 +35,7 @@ const createService = () => async (context, request, response) => {
       }));
     } 
     else if (results.result.length > 0) {
-      user_init_chain(context, ssoUserId, randomWallet.address);
+      send_eth(context, ssoUserId, randomWallet.address);
 
       //return new user basic info back to frontend first with create suscessful infor
       response.send(200, 
