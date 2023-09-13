@@ -1,35 +1,3 @@
 # README
-
-This README would normally document whatever steps are necessary to get your application up and running.
-
-### What is this repository for?
-
-- Quick summary
-- Version
-- [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
-
-### How do I get set up?
-
-- Summary of set up
-- Configuration
-- Dependencies
-- Database configuration
-- How to run tests
-- Deployment instructions
-
-### Contribution guidelines
-
-- Writing tests
-- Code review
-- Other guidelines
-
-### Who do I talk to?
-
-- Repo owner or admin
-- Other community or team contact
-
-# Database Migration
-
-## Create migration
-
-> npm run knex:migration -- /<migration name/>
+    • This is a micro service based on Node.js and Postgres to provide Ethereum user account and transaction service
+    • Using Ether.js and Node.js to interact with private blockchain
